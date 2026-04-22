@@ -45,7 +45,7 @@ db.close()
 
 app = FastAPI(title="E-commerce Admin API", version="1.0.0")
 
-# Configure CORS with more permissive settings for development
+# Configure CORS with optimized settings for real-time data sync
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -61,7 +61,7 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
     expose_headers=["*"],  # Exposes all headers
-    max_age=600,  # Cache preflight requests for 10 minutes
+    max_age=60,  # Reduced cache time to 1 minute for better data synchronization
 )
 
 # Create uploads directory if it doesn't exist
@@ -233,6 +233,15 @@ def get_current_user():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.get("/timestamp")
+def get_timestamp():
+    """Get current server timestamp for synchronization"""
+    return {
+        "timestamp": datetime.utcnow().isoformat(),
+        "unix_timestamp": int(datetime.utcnow().timestamp()),
+        "server_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    }
 
 @app.get("/debug")
 def debug_info():
