@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: backend-ecommerce
+    env: python
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install --only-binary=all -r requirements.txt"
+    startCommand: "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.0
+    buildFilters:
+      - path: .venv
+        type: ignored
+      - path: __pycache__
+        type: ignored
