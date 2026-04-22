@@ -122,3 +122,36 @@ def test_login():
             
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+@app.post("/simple-login")
+def simple_login():
+    try:
+        from .database import SessionLocal
+        from .models import User
+        from .auth import get_password_hash, verify_password
+        from datetime import timedelta, datetime
+        from jose import jwt
+        
+        db = SessionLocal()
+        
+        # Find admin user
+        user = db.query(User).filter(User.email == "admin@gmail.com").first()
+        if not user:
+            db.close()
+            return {"error": "User not found"}
+        
+        # Verify password
+        if not verify_password("11112222", user.hashed_password):
+            db.close()
+            return {"error": "Invalid password"}
+        
+        # Create token
+        expire = datetime.utcnow() + timedelta(minutes=30)
+        to_encode = {"sub": user.email, "exp": expire}
+        token = jwt.encode(to_encode, "your-secret-key-here-change-in-production", algorithm="HS256")
+        
+        db.close()
+        return {"access_token": token, "token_type": "bearer", "user": user.email}
+        
+    except Exception as e:
+        return {"error": str(e)}
