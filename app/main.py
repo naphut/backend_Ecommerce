@@ -51,3 +51,30 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.get("/debug")
+def debug_info():
+    try:
+        from .database import engine, Base
+        from .models import User
+        from sqlalchemy.orm import sessionmaker
+        
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = SessionLocal()
+        
+        # Check if admin user exists
+        admin_user = db.query(User).filter(User.email == "admin@gmail.com").first()
+        admin_exists = admin_user is not None
+        
+        db.close()
+        
+        return {
+            "database_connected": True,
+            "admin_user_exists": admin_exists,
+            "tables_created": True
+        }
+    except Exception as e:
+        return {
+            "database_connected": False,
+            "error": str(e)
+        }
