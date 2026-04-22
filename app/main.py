@@ -99,3 +99,26 @@ def debug_info():
             "database_connected": False,
             "error": str(e)
         }
+
+@app.post("/test-login")
+def test_login():
+    try:
+        from .database import SessionLocal
+        from .models import User
+        from .auth import authenticate_user, create_access_token
+        from datetime import timedelta
+        
+        db = SessionLocal()
+        
+        # Test authentication
+        user = authenticate_user(db, "admin@gmail.com", "11112222")
+        if user:
+            token = create_access_token(data={"sub": user.email}, expires_delta=timedelta(minutes=30))
+            db.close()
+            return {"success": True, "token": token, "user": user.email}
+        else:
+            db.close()
+            return {"success": False, "error": "Authentication failed"}
+            
+    except Exception as e:
+        return {"success": False, "error": str(e)}
