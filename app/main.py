@@ -21,6 +21,7 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
+        "https://backend-ecommerce-vhi7.onrender.com",  # Render backend URL
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
