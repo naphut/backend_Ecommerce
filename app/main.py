@@ -21,13 +21,18 @@ if not admin_user:
         email="admin@gmail.com",
         username="admin",
         full_name="System Administrator",
-        hashed_password=get_password_hash("11112222"),
+        hashed_password=get_password_hash("admin123"),
         is_admin=True,
         is_active=True
     )
     db.add(admin_user)
     db.commit()
     print("Admin user created successfully")
+else:
+    # Update existing admin user with correct password
+    admin_user.hashed_password = get_password_hash("admin123")
+    db.commit()
+    print("Admin password updated")
 db.close()
 
 app = FastAPI(title="E-commerce Admin API", version="1.0.0")
@@ -111,7 +116,7 @@ def test_login():
         db = SessionLocal()
         
         # Test authentication
-        user = authenticate_user(db, "admin@gmail.com", "11112222")
+        user = authenticate_user(db, "admin@gmail.com", "admin123")
         if user:
             token = create_access_token(data={"sub": user.email}, expires_delta=timedelta(minutes=30))
             db.close()
@@ -141,7 +146,7 @@ def simple_login():
             return {"error": "User not found"}
         
         # Verify password
-        if not verify_password("11112222", user.hashed_password):
+        if not verify_password("admin123", user.hashed_password):
             db.close()
             return {"error": "Invalid password"}
         
