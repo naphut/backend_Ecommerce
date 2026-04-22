@@ -9,6 +9,27 @@ import os
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Create admin user if it doesn't exist
+from .models import User
+from .database import SessionLocal
+from .auth import get_password_hash
+
+db = SessionLocal()
+admin_user = db.query(User).filter(User.email == "admin@gmail.com").first()
+if not admin_user:
+    admin_user = User(
+        email="admin@gmail.com",
+        username="admin",
+        full_name="System Administrator",
+        hashed_password=get_password_hash("11112222"),
+        is_admin=True,
+        is_active=True
+    )
+    db.add(admin_user)
+    db.commit()
+    print("Admin user created successfully")
+db.close()
+
 app = FastAPI(title="E-commerce Admin API", version="1.0.0")
 
 # Configure CORS with more permissive settings for development
