@@ -4,44 +4,20 @@ from fastapi.staticfiles import StaticFiles
 from .database import engine, Base
 from .routers import products, upload
 from .config import settings
+from .db_init import initialize_database, check_database_health
 import os
 import hashlib
 from datetime import timedelta, datetime
 from jose import jwt
 from pydantic import BaseModel
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
-
-# Create admin user if it doesn't exist
-from .models import User
-from .database import SessionLocal
-
-db = SessionLocal()
-admin_user = db.query(User).filter(User.email == "admin@gmail.com").first()
-if not admin_user:
-    # Use simple SHA256 hash instead of bcrypt
-    password_hash = hashlib.sha256("admin123".encode()).hexdigest()
-    admin_user = User(
-        email="admin@gmail.com",
-        username="admin",
-        full_name="System Administrator",
-        hashed_password=password_hash,
-        is_admin=True,
-        is_active=True
-    )
-    db.add(admin_user)
-    db.commit()
-    print("Admin user created successfully")
+# Initialize database with robust error handling
+print("Initializing database...")
+db_initialized = initialize_database()
+if not db_initialized:
+    print("WARNING: Database initialization failed, some features may not work properly")
 else:
-    # Update existing admin user with SHA256 hash
-    password_hash = hashlib.sha256("admin123".encode()).hexdigest()
-    admin_user.hashed_password = password_hash
-    admin_user.is_admin = True
-    admin_user.is_active = True
-    db.commit()
-    print("Admin password updated")
-db.close()
+    print("Database initialization completed successfully")
 
 app = FastAPI(title="E-commerce Admin API", version="1.0.0")
 
@@ -245,30 +221,29 @@ def get_timestamp():
 
 @app.get("/debug")
 def debug_info():
-    try:
-        from .database import engine, Base
-        from .models import User
-        from sqlalchemy.orm import sessionmaker
-        
-        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-        db = SessionLocal()
-        
-        # Check if admin user exists
-        admin_user = db.query(User).filter(User.email == "admin@gmail.com").first()
-        admin_exists = admin_user is not None
-        
-        db.close()
-        
-        return {
-            "database_connected": True,
-            "admin_user_exists": admin_exists,
-            "tables_created": True
-        }
-    except Exception as e:
-        return {
-            "database_connected": False,
-            "error": str(e)
-        }
+    """Debug endpoint with detailed database information"""
+    health = check_database_health()
+    return {
+        "database_connected": health["healthy"],
+        "database_type": health["database_type"],
+        "admin_user_exists": health.get("user_count", 0) > 0,
+        "user_count": health.get("user_count", 0),
+        "error": health.get("error", None),
+        "db_initialized": db_initialized
+    }
+
+@app.get("/db-status")
+def database_status():
+    """Detailed database status endpoint"""
+    health = check_database_health()
+    return {
+        "status": "healthy" if health["healthy"] else "unhealthy",
+        "database_type": health["database_type"],
+        "user_count": health.get("user_count", 0),
+        "database_url": settings.DATABASE_URL[:20] + "..." if len(settings.DATABASE_URL) > 20 else settings.DATABASE_URL,
+        "initialization_status": "success" if db_initialized else "failed",
+        "error": health.get("error", None)
+    }
 
 @app.post("/test-login")
 def test_login():
