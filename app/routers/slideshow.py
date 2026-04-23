@@ -35,7 +35,7 @@ class SlideShowUpdate(BaseModel):
 class SlideShowResponse(SlideShowBase):
     id: int
     created_at: str
-    updated_at: str = None
+    updated_at: str | None = None
 
     class Config:
         from_attributes = True
