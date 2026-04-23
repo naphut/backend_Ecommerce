@@ -245,6 +245,31 @@ def database_status():
         "error": health.get("error", None)
     }
 
+@app.get("/test-persistence")
+def test_persistence():
+    """Test if data actually persists in the database"""
+    try:
+        from .persistence_test import test_data_persistence, get_database_info
+        
+        # Run persistence test
+        persistence_ok = test_data_persistence()
+        
+        # Get database info
+        db_info = get_database_info()
+        
+        return {
+            "persistence_test": "PASSED" if persistence_ok else "FAILED",
+            "database_info": db_info,
+            "message": "Data persistence working correctly" if persistence_ok else "WARNING: Data not persisting properly!"
+        }
+        
+    except Exception as e:
+        return {
+            "persistence_test": "ERROR",
+            "error": str(e),
+            "message": "Could not test data persistence"
+        }
+
 @app.post("/test-login")
 def test_login():
     try:

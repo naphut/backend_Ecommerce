@@ -12,16 +12,26 @@ def wait_for_database(max_retries=30, retry_interval=2):
     while retries < max_retries:
         try:
             with engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            print("Database connection successful")
-            return True
+                result = conn.execute(text("SELECT 1"))
+                print(f"Database connection successful (attempt {retries + 1})")
+                
+                # Verify it's PostgreSQL in production
+                if settings.DATABASE_URL.startswith("postgresql"):
+                    try:
+                        pg_version = conn.execute(text("SELECT version()")).scalar()
+                        print(f"PostgreSQL version: {pg_version[:50]}...")
+                    except:
+                        pass
+                
+                return True
         except Exception as e:
             retries += 1
             print(f"Database connection attempt {retries}/{max_retries} failed: {e}")
             if retries < max_retries:
                 time.sleep(retry_interval)
     
-    print("Failed to connect to database after maximum retries")
+    print(f"Failed to connect to database after {max_retries} attempts")
+    print(f"Database URL was: {settings.DATABASE_URL[:50]}...")
     return False
 
 def initialize_database():
