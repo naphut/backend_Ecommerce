@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .database import engine, Base
-from .routers import products, upload
+from .routers import products, upload, slideshow
 from .config import settings
 from .db_init import initialize_database, check_database_health
 import os
@@ -28,9 +28,9 @@ app.add_middleware(
         "http://localhost:3000",  # React default port
         "https://frontend-user-first.vercel.app",
         "https://frontend-admin-first-6bpu.vercel.app",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
+        # "http://localhost:3001",
+        # "http://127.0.0.1:3000",
+        # "http://127.0.0.1:3001",
         "https://backend-ecommerce-vhi7.onrender.com",  # Render backend URL
     ],
     allow_credentials=True,
@@ -52,6 +52,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # Include routers (excluding auth to avoid conflicts)
 app.include_router(products.router)
 app.include_router(upload.router)
+app.include_router(slideshow.router)
 
 @app.get("/")
 def root():

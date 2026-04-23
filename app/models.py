@@ -110,3 +110,32 @@ class Product(Base):
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }
+
+class SlideShow(Base):
+    __tablename__ = "slideshows"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    image_url = Column(String, nullable=False)
+    button_text = Column(String)
+    button_link = Column(String)
+    is_active = Column(Boolean, default=True)
+    order = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    def to_dict(self):
+        """Convert to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'image_url': self.image_url,
+            'button_text': self.button_text,
+            'button_link': self.button_link,
+            'is_active': self.is_active,
+            'order': self.order,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+        }
